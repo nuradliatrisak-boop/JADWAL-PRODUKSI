@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: jadwal-produksi
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: SCHEDULE_METHOD
+        value: EDD
+      - key: APP_USER
+        sync: false
+      - key: APP_PASSWORD
+        sync: false

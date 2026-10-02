@@ -1,0 +1,7 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pandas>=2.2
+numpy>=1.26
+numba>=0.60
+openpyxl>=3.1

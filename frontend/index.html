@@ -1,0 +1,287 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Jadwal Produksi Bengkel</title><meta name="description" content="Penjadwalan produksi bengkel: Gantt per mesin, keterlambatan SO, utilisasi mesin."><link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230d1b45'/><rect x='5' y='8' width='14' height='4' rx='2' fill='%237fd1ff'/><rect x='11' y='14' width='16' height='4' rx='2' fill='%23ffd166'/><rect x='7' y='20' width='12' height='4' rx='2' fill='%237ef0c0'/></svg>"><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
+:root{--bg:#f4f7fb;--panel:#fff;--panel2:#f8fafc;--ink:#15213b;--mute:#68758d;--line:#dfe6f0;--acc:#1769ff;--acc2:#0b4dcc;--cyan:#16b8c4;--amb:#d99116;--bad:#d83b4b;--ok:#15966f;--navy:#0d1b45;--band:#f1f5f9;--shadow:0 18px 50px rgba(19,40,77,.09);--shadow2:0 8px 24px rgba(19,40,77,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--panel:#131b2d;--panel2:#101827;--ink:#edf2ff;--mute:#9aa8c1;--line:#27334d;--acc:#5d9cff;--acc2:#82b5ff;--cyan:#52d6df;--amb:#ffbf5c;--bad:#ff7e89;--ok:#55d4ab;--navy:#0b1535;--band:#182235;--shadow:0 18px 50px rgba(0,0,0,.22);--shadow2:0 8px 24px rgba(0,0,0,.18)}}
+:root[data-theme="dark"]{--bg:#0b1020;--panel:#131b2d;--panel2:#101827;--ink:#edf2ff;--mute:#9aa8c1;--line:#27334d;--acc:#5d9cff;--acc2:#82b5ff;--cyan:#52d6df;--amb:#ffbf5c;--bad:#ff7e89;--ok:#55d4ab;--navy:#0b1535;--band:#182235;--shadow:0 18px 50px rgba(0,0,0,.22);--shadow2:0 8px 24px rgba(0,0,0,.18)}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 "DM Sans",system-ui,sans-serif}button,input,textarea{font:inherit}button{cursor:pointer}
+.hero{position:relative;overflow:hidden;color:#fff;background:radial-gradient(circle at 83% 10%,rgba(71,151,255,.35),transparent 28%),linear-gradient(125deg,#09163c 0%,#10265c 47%,#1169d9 100%);padding:30px 20px 106px}.hero:before,.hero:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.12);border-radius:50%;pointer-events:none}.hero:before{width:480px;height:480px;right:-170px;top:-300px}.hero:after{width:700px;height:700px;right:-350px;top:-430px}
+.hero-inner{max-width:1180px;margin:auto;position:relative;z-index:2}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:42px}.brand{display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:.01em}.brand-mark{width:38px;height:38px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);border-radius:12px;display:grid;place-items:center;backdrop-filter:blur(8px)}.brand-mark svg{width:21px;height:21px}.secure{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#dce8ff;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);padding:7px 11px;border-radius:999px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:42px;align-items:end}.eyebrow{display:flex;align-items:center;gap:8px;color:#9bdcff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}.eyebrow i{width:7px;height:7px;border-radius:50%;background:#58e4d4;box-shadow:0 0 0 5px rgba(88,228,212,.12)}h1{font:800 clamp(34px,5.2vw,62px)/1.02 Manrope,sans-serif;letter-spacing:-.045em;margin:0 0 16px;max-width:680px}.hero-copy{font-size:16px;color:#c8d7f5;max-width:660px;margin:0}.hero-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.chip{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.13);color:#eaf1ff}.chip-dot{width:6px;height:6px;border-radius:50%;background:#7fd1ff}
+.hero-visual{position:relative;min-height:205px}.visual-card{position:absolute;inset:0 0 0 auto;width:min(440px,100%);border:1px solid rgba(255,255,255,.15);border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05));backdrop-filter:blur(14px);padding:20px;box-shadow:0 25px 60px rgba(0,0,0,.16)}.visual-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;font-size:12px;color:#dce7fb}.live{display:flex;align-items:center;gap:6px;color:#a8ffe9}.live b{width:6px;height:6px;border-radius:50%;background:#55e0bf}.timeline{display:grid;gap:11px}.tl-row{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:center}.tl-row span{font-size:11px;color:#b6c5e3}.tl-track{height:20px;border-radius:7px;background:rgba(255,255,255,.07);position:relative;overflow:hidden}.tl-bar{position:absolute;height:100%;border-radius:7px}.b1{left:4%;width:45%;background:#5bc8ff}.b2{left:24%;width:55%;background:#ffd166}.b3{left:10%;width:32%;background:#6ee7cf}.b4{left:50%;width:35%;background:#e6a6ff}.b5{left:31%;width:48%;background:#aeb9ff}.visual-foot{display:flex;justify-content:space-between;margin-top:17px;font-size:11px;color:#aebdd9}.visual-foot strong{color:#fff}
+main{max-width:1180px;margin:-64px auto 0;padding:0 18px 70px;position:relative;z-index:3}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}.step{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.7);box-shadow:var(--shadow2);border-radius:15px;padding:13px 15px;display:flex;align-items:center;gap:11px;color:var(--mute)}.step-num{width:30px;height:30px;border-radius:9px;background:#eaf1ff;color:var(--acc);display:grid;place-items:center;font-weight:800;font-size:13px}.step strong{display:block;color:var(--ink);font-size:13px}.step small{font-size:11px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:15px;box-shadow:var(--shadow2)}.card-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:17px}.card-title{display:flex;gap:12px;align-items:flex-start}.num{flex:0 0 auto;width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#eaf2ff,#f3f8ff);color:var(--acc);display:grid;place-items:center;font-weight:800;font-size:13px;border:1px solid #dce8ff}.card h2{font:700 17px Manrope,sans-serif;margin:1px 0 3px;letter-spacing:-.02em}.sub{font-size:12.5px;color:var(--mute);margin:0}.mini-badge{white-space:nowrap;font-size:11px;font-weight:700;color:var(--mute);border:1px solid var(--line);background:var(--panel2);padding:6px 9px;border-radius:999px}
+.drop{display:block;position:relative;border:1.5px dashed #9fb7dc;border-radius:17px;padding:30px 22px;text-align:center;cursor:pointer;color:var(--mute);background:linear-gradient(180deg,var(--panel2),transparent);transition:.2s}.drop:hover,.drop:focus-within{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 4%,var(--panel));transform:translateY(-1px)}.drop-icon{width:52px;height:52px;border-radius:16px;margin:0 auto 12px;background:linear-gradient(135deg,#e8f1ff,#effbff);color:var(--acc);display:grid;place-items:center}.drop-icon svg{width:25px;height:25px}.drop-title{font-weight:700;color:var(--ink);font-size:15px}.drop-title b{color:var(--acc)}.drop-help{font-size:12px;margin-top:4px}.drop input{position:absolute;opacity:0;width:1px;height:1px}.sh{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}.sh span{font-size:11.5px;font-weight:600;padding:5px 9px;border-radius:999px;border:1px solid var(--line);color:var(--mute);background:var(--panel2)}.sh .y{background:color-mix(in srgb,var(--ok) 10%,transparent);color:var(--ok);border-color:color-mix(in srgb,var(--ok) 25%,var(--line))}.sh .n{color:var(--bad)}.st{display:flex;align-items:center;gap:7px;color:var(--mute);margin:12px 0 0;font-size:12.5px}.st:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:2px 0 12px;background:var(--panel2)}.seg label{padding:9px 14px;cursor:pointer;font-size:13px;font-weight:600;color:var(--mute);transition:.15s}.seg input{display:none}.seg label:has(input:checked){background:var(--acc);color:#fff;box-shadow:0 3px 10px rgba(23,105,255,.22)}.row{display:grid;grid-template-columns:repeat(6,minmax(100px,1fr));gap:11px}.f label{display:block;font-size:11.5px;color:var(--mute);margin:0 0 5px;font-weight:600}.f input[type=number],textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;transition:.15s}.f input[type=number]:focus,textarea:focus{outline:0;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 12%,transparent)}textarea{width:min(420px,100%);height:76px;resize:vertical}.change-note{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;margin-top:13px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--mute);font-size:12px}.change-note svg{flex:0 0 auto;margin-top:2px;color:var(--acc)}button{font:700 13px "DM Sans",sans-serif;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:0;border-radius:11px;padding:11px 16px;cursor:pointer;box-shadow:0 7px 16px rgba(23,105,255,.18);transition:.16s}button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 22px rgba(23,105,255,.22)}button:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}button.sec{background:transparent;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));box-shadow:none}.run-area{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:17px}.run-help{font-size:11.5px;color:var(--mute)}.hide{display:none}:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.results-intro{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:28px 0 13px}.results-intro h2{font:800 22px Manrope,sans-serif;margin:0;letter-spacing:-.03em}.results-intro p{margin:3px 0 0;color:var(--mute);font-size:12.5px}.result-nav{display:flex;gap:6px}.result-nav a{font-size:11.5px;font-weight:700;color:var(--mute);border:1px solid var(--line);padding:7px 10px;border-radius:9px;text-decoration:none;background:var(--panel)}
+.kpi{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:15px}.kpi div{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}.kpi div:after{content:"";position:absolute;width:58px;height:58px;border-radius:50%;right:-23px;bottom:-28px;background:color-mix(in srgb,var(--acc) 8%,transparent)}.kpi b{display:block;font:800 27px/1.1 Manrope,sans-serif;letter-spacing:-.04em}.kpi span{display:block;font-size:11.5px;color:var(--mute);margin-top:5px}.kpi .kpi-label{display:flex;align-items:center;gap:6px}.kpi .kpi-label i{width:6px;height:6px;border-radius:50%;background:var(--acc)}
+.section-anchor{scroll-margin-top:90px}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.toolbar p{margin:0;color:var(--mute);font-size:12px}.legend-help{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:11px}.legend-help i{width:7px;height:7px;border-radius:50%;background:var(--cyan)}.scroll{overflow:auto;max-width:100%;border:1px solid var(--line);border-radius:13px;background:var(--panel2)}#gantt{border-radius:13px;padding:4px;min-height:130px}svg text{fill:var(--mute);font:11px "DM Sans",sans-serif}#gantt svg{display:block}.leg{display:flex;flex-wrap:wrap;gap:7px 11px;margin-top:11px;font-size:11.5px}.leg span{padding:6px 9px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);transition:.15s}.leg span:hover{border-color:var(--acc);transform:translateY(-1px)}.leg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--mute);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;background:var(--panel2)}tr:last-child td{border-bottom:0}.tag{padding:4px 9px;border-radius:999px;font-size:11px;font-weight:700}.tl{background:color-mix(in srgb,var(--bad) 11%,transparent);color:var(--bad)}.to{background:color-mix(in srgb,var(--ok) 11%,transparent);color:var(--ok)}.util-wrap{display:grid;gap:2px}.ub{display:grid;grid-template-columns:150px minmax(150px,1fr) 52px;gap:11px;align-items:center;margin:5px 0;font-size:12px}.ub>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ub .b{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:99px;overflow:hidden}.ub .b span{display:block;height:100%;border-radius:99px;transition:width .45s ease}.util-note{margin:13px 0 0;padding-top:12px;border-top:1px solid var(--line);color:var(--mute);font-size:11.5px}.result-footer{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:17px;padding-top:15px;border-top:1px solid var(--line)}.result-footer p{margin:0;color:var(--mute);font-size:11.5px;max-width:760px}.footer{max-width:1180px;margin:-48px auto 0;padding:0 18px 30px;color:var(--mute);font-size:11px}.footer-inner{border-top:1px solid var(--line);padding-top:17px;display:flex;justify-content:space-between;gap:20px}.footer strong{color:var(--ink)}
+#tip{position:fixed;display:none;pointer-events:none;background:#0b1738;color:#fff;padding:10px 12px;border-radius:11px;font-size:12px;line-height:1.55;max-width:270px;z-index:99;box-shadow:0 12px 30px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12)}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}.hero-visual{display:none}.row{grid-template-columns:repeat(3,1fr)}.kpi{grid-template-columns:repeat(3,1fr)}.steps{grid-template-columns:1fr}.step{padding:11px 13px}.topbar{margin-bottom:30px}.results-intro{align-items:flex-start;flex-direction:column}.result-nav{width:100%;overflow:auto}}
+@media(max-width:620px){.hero{padding:22px 15px 88px}.topbar{margin-bottom:28px}.secure{display:none}.brand{font-size:13px}.hero-copy{font-size:14px}.hero-pills{gap:6px}.chip{font-size:10.5px}.hero h1{font-size:38px}main{padding:0 11px 55px}.card{padding:17px;border-radius:16px}.card-head{flex-direction:column}.mini-badge{align-self:flex-start}.row{grid-template-columns:repeat(2,1fr)}.kpi{grid-template-columns:repeat(2,1fr)}.kpi div{padding:14px}.kpi b{font-size:24px}.run-area{align-items:flex-start;flex-direction:column}.run-area button{width:100%}.ub{grid-template-columns:105px minmax(100px,1fr) 43px}.footer-inner{flex-direction:column}.drop{padding:25px 14px}.seg{width:100%;display:flex}.seg label{flex:1;text-align:center;padding:9px 8px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+.gview{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:4px 0 12px;padding:12px;background:var(--band);border-radius:10px}
+.gview .seg2{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.gview .seg2 button{background:transparent;color:var(--ink);border:0;border-radius:0;padding:6px 11px;font-size:13px;font-weight:600;cursor:pointer}
+.gview .seg2 button.on{background:var(--acc);color:#fff}
+.gview .f2{display:flex;flex-direction:column;gap:3px}
+.gview .f2 label{font-size:12px;color:var(--mute)}
+.gview .f2 input{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}
+.gview button.sec2{background:transparent;color:var(--acc);border:1px solid var(--acc);border-radius:7px;padding:6px 12px;font-weight:600;font-size:13px;cursor:pointer}
+.gview .gmeta{font-size:12.5px;color:var(--mute);margin-left:auto;align-self:center}
+@media print{
+  body *{visibility:hidden}
+  #out,#out *{visibility:visible}
+  #out{position:absolute;left:0;top:0;width:100%}
+  .result-nav,.result-footer button,#exp,.legend-help,.gview .f2,.gview button{display:none!important}
+  .scroll{overflow:visible!important}
+  @page{size:landscape;margin:10mm}
+}
+
+.gview{align-items:end}
+#sheet td,#sheet th{padding:7px 10px}
+#sheet thead th,#sheet tr:first-child th{position:sticky;top:0;background:var(--panel)}
+.err{color:var(--bad);font-weight:600}
+@media print{
+  #gantt svg{width:100%!important;height:auto!important}
+  #sheet-sec .scroll{max-height:none!important;overflow:visible!important}
+  #expPdf{display:none!important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tr{page-break-inside:avoid}
+}
+</style></head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="topbar">
+      <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5M4 19h16M7 16h3v-5H7v5Zm5 0h3V7h-3v9Zm5 0h3V9h-3v7Z"/></svg></span>Production Scheduling</div>
+      <span class="secure"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 5 6v5c0 4.4 2.8 8.3 7 10 4.2-1.7 7-5.6 7-10V6l-7-3Z"/><path d="m9.5 12 1.7 1.7 3.4-3.5"/></svg> Data tetap di perangkat</span>
+    </div>
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><i></i> Sistem Penjadwalan Produksi</div>
+        <h1>Jadwal Produksi<br>Bengkel</h1>
+        <p class="hero-copy">Ubah data Excel menjadi jadwal kerja yang lebih mudah dibaca: lihat urutan operasi per mesin, SO yang berpotensi terlambat, sampai tingkat kesibukan setiap mesin.</p>
+        <div class="hero-pills"><span class="chip"><i class="chip-dot"></i> Dihitung di server penjadwalan</span><span class="chip"><i class="chip-dot"></i> Kalender kerja dari Excel</span><span class="chip"><i class="chip-dot"></i> Metode sementara</span></div>
+      </div>
+      <div class="hero-visual" aria-hidden="true"><div class="visual-card">
+        <div class="visual-head"><span>PREVIEW • WORKLOAD</span><span class="live"><b></b> Ready to schedule</span></div>
+        <div class="timeline"><div class="tl-row"><span>Machining</span><div class="tl-track"><i class="tl-bar b1"></i></div></div><div class="tl-row"><span>Welding</span><div class="tl-track"><i class="tl-bar b2"></i></div></div><div class="tl-row"><span>Assembly</span><div class="tl-track"><i class="tl-bar b3"></i></div></div><div class="tl-row"><span>QC</span><div class="tl-track"><i class="tl-bar b4"></i></div></div><div class="tl-row"><span>Finishing</span><div class="tl-track"><i class="tl-bar b5"></i></div></div></div>
+        <div class="visual-foot"><span>Release → Process → Due date</span><strong>Ringkasan Gantt</strong></div>
+      </div></div>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="steps" aria-label="Alur aplikasi"><div class="step"><span class="step-num">01</span><div><strong>Unggah data</strong><small>Excel perencanaan bengkel</small></div></div><div class="step"><span class="step-num">02</span><div><strong>Atur penjadwalan</strong><small>Pekerja, mesin, nama hasil</small></div></div><div class="step"><span class="step-num">03</span><div><strong>Analisis hasil</strong><small>Gantt, keterlambatan, utilisasi</small></div></div></div>
+
+  <section class="card">
+    <div class="card-head"><div class="card-title"><span class="num">01</span><div><h2>Masukkan data Excel</h2><p class="sub">File dikirim ke server penjadwalan milikmu (bukan ke pihak lain) dan disimpan di riwayat supaya hasilnya bisa dibuka lagi nanti.</p></div></div><span class="mini-badge">XLSX / XLSM</span></div>
+    <label class="drop"><input type="file" id="file" accept=".xlsx,.xlsm"><div class="drop-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></div><div class="drop-title"><b>Pilih file Excel</b> untuk mulai</div><div class="drop-help">Butuh 7 sheet: SO, Operations, Eligible_Resources, Resources, Human_Capacity, Calendar, Lead_Time.</div></label>
+    <div class="sh" id="sh"></div><p class="st" id="st">Belum ada file yang dipilih.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><div class="card-title"><span class="num">02</span><div><h2>Atur penjadwalan</h2><p class="sub">Patokan kapasitas (pekerja per bulan, unit mesin, kalender) dibaca dari Excel. Kalau ada perubahan jumlah pekerja atau mesin, isi di bawah.</p></div></div><span class="mini-badge">PYTHON</span></div>
+    <div id="methBlock" class="hide"><div class="seg" id="meth" style="flex-wrap:wrap"><label><input type="radio" name="method" value="EDD" checked>EDD</label><label><input type="radio" name="method" value="FCFS">FCFS</label><label><input type="radio" name="method" value="SPT">SPT</label><label><input type="radio" name="method" value="CR">CR</label><label><input type="radio" name="method" value="GA">Genetic Algorithm</label></div>
+    <p class="note" id="mnote" style="margin:0 0 10px"></p></div><p class="note" id="fixedNote" style="margin:0 0 10px"></p>
+    <div class="f" style="margin:6px 0 4px"><label>Ada perubahan pekerja atau mesin?</label></div>
+    <div class="seg"><label><input type="radio" name="chg" value="n" checked>Tidak, pakai patokan Excel</label><label><input type="radio" name="chg" value="y">Ya, isi data baru</label></div>
+    <p class="note" id="pat" style="margin:0 0 8px">Patokan akan tampil setelah Excel dibaca.</p>
+    <div id="chgBox" class="hide"><div class="row"><div class="f"><label for="wMech">Pekerja Mech</label><input type="number" id="wMech" min="1" max="99"></div><div class="f"><label for="wMach">Pekerja Mach</label><input type="number" id="wMach" min="1" max="99"></div><div class="f"><label for="wWeld">Welder</label><input type="number" id="wWeld" min="1" max="99"></div><div class="f"><label for="wQC">QC</label><input type="number" id="wQC" min="1" max="99"></div></div>
+    <div class="f" style="margin-top:13px"><label for="mesin">Perubahan jumlah unit mesin <span style="font-weight:400">— satu per baris, contoh: CNC 1=2</span></label><textarea id="mesin" rows="3"></textarea></div>
+    <p class="note" style="margin:8px 0 12px">Jumlah pekerja yang diisi berlaku sama untuk <b>semua bulan</b> (menggantikan patokan per bulan di Excel). Nama mesin harus sama persis dengan sheet Resources. Perubahan jumlah shift belum didukung karena kalender di kode penjadwalan terkunci 400 menit produktif per hari.</p></div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px"><div class="f"><label for="lbl">Nama / catatan hasil (opsional)</label><input type="text" id="lbl" maxlength="80" placeholder="mis. Rencana Oktober 2026" style="min-width:240px"></div><div class="f"><label for="due">Jam due date</label><input type="time" id="due" value="17:00"></div><div class="f hide" id="gaBox"><label for="seed">Seed GA</label><input type="number" id="seed" value="101" min="1"></div><div class="f hide" id="gaBox2"><label for="gens">Generasi GA</label><input type="number" id="gens" value="70" min="10" max="300"></div></div>
+    <div class="run-area"><span class="run-help" id="runhelp">Setelah Excel terbaca, tombol penjadwalan akan aktif.</span><button id="run" disabled>Jalankan penjadwalan <span aria-hidden="true">→</span></button></div>
+  </section>
+
+  <section class="card section-anchor" id="hist-sec"><div class="card-head"><div class="card-title"><span class="num">03</span><div><h2>Riwayat penjadwalan</h2><p class="sub">Setiap hasil tersimpan di server. Buka kembali kapan saja, atau unduh Excel input yang dulu dipakai.</p></div></div><span class="mini-badge">TERSIMPAN</span></div><div class="scroll"><table id="hist"></table></div></section>
+
+  <div id="out" class="hide">
+    <div class="results-intro"><div><h2>Ringkasan hasil penjadwalan</h2><p>Gunakan angka di bawah sebagai ringkasan cepat sebelum membaca detail jadwal.</p></div><div class="result-nav"><a href="#gantt-sec">Gantt</a><a href="#late-sec">Keterlambatan</a><a href="#util-sec">Utilisasi</a><a href="#sheet-sec">Lembar jadwal</a></div></div>
+    <div class="kpi" id="kpi"></div>
+    <section class="card section-anchor" id="gantt-sec"><div class="card-head"><div class="card-title"><span class="num">A</span><div><h2>Gantt chart per mesin</h2><p class="sub">Satu baris = mesin · satu balok = operasi · satu warna = satu SO · balok pudar bergaris = vendor.</p></div></div><span class="mini-badge">INTERAKTIF</span></div><div class="toolbar"><p>Arahkan kursor / sentuh balok untuk detail. Klik SO pada legenda untuk menyorot jadwalnya.</p><span class="legend-help"><i></i> Geser horizontal untuk jadwal yang lebih jauh</span></div>
+<div class="gview"><div class="seg2" id="gscale"><button data-v="day" class="on">Harian</button><button data-v="week">Mingguan</button><button data-v="year">Tahunan</button></div>
+<div class="f2"><label for="gfrom">Dari tanggal</label><input type="date" id="gfrom"></div>
+<div class="f2"><label for="gto">Sampai tanggal</label><input type="date" id="gto"></div>
+<button class="sec2" id="gapply">Terapkan rentang</button><button class="sec2" id="gclear">Tampilkan semua</button><span class="gmeta" id="gmeta"></span></div>
+<div class="scroll" id="gantt"></div><div class="leg" id="leg"></div></section>
+    <section class="card section-anchor" id="late-sec"><div class="card-head"><div class="card-title"><span class="num">B</span><div><h2>Keterlambatan per SO</h2><p class="sub">Bandingkan release date, due date, estimasi selesai, dan status tiap pesanan.</p></div></div><span class="mini-badge">HARI KALENDER</span></div><div class="scroll"><table id="late"></table></div></section>
+    <section class="card section-anchor" id="util-sec"><div class="card-head"><div class="card-title"><span class="num">C</span><div><h2>Utilisasi mesin</h2><p class="sub">Semakin tinggi persentasenya, semakin besar waktu kerja mesin yang terpakai.</p></div></div><span class="mini-badge">HARI KERJA EFEKTIF</span></div><div class="util-wrap" id="util"></div></section>
+    <section class="card section-anchor" id="sheet-sec"><div class="card-head"><div class="card-title"><span class="num">D</span><div><h2>Lembar jadwal per operasi</h2><p class="sub" id="shsub">Urut berdasarkan waktu mulai, mengikuti rentang tanggal di Gantt.</p></div></div><span class="mini-badge">TABEL</span></div><div class="scroll" style="max-height:520px;overflow:auto"><table id="sheet"></table></div></section>
+    <div class="result-footer"><p id="mfoot"><strong>Catatan metode:</strong> </p><button class="sec" id="exp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>Export ke Excel</button><button class="sec" id="expPdf" style="margin-left:8px">Export ke PDF</button></div>
+  </div>
+</main>
+<footer class="footer"><div class="footer-inner"><span><strong>Jadwal Produksi Bengkel</strong> · aplikasi penjadwalan produksi</span><span>Dihitung dengan kode penjadwalan Dinda · ekspor ke Excel / PDF</span></div></footer>
+<div id="tip"></div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PAL=['#0a7cff','#e08a00','#12a37f','#d6336c','#7c4dff','#00a8c6','#f76707','#5c940d','#c2255c','#495adb'];
+const MON=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const DAY=864e5,API=window.API_BASE||'';
+const REQ=['SO','Operations','Eligible_Resources','Resources','Human_Capacity','Calendar','Lead_Time'];
+const NOTE={EDD:'Operasi dari SO dengan due date terdekat didahulukan. Mesin dipilih yang membuat operasi selesai paling awal (ECT).',
+ FCFS:'SO yang release lebih dulu didahulukan. Mesin dipilih berdasarkan waktu selesai paling awal (ECT).',
+ SPT:'Operasi dengan waktu proses terpendek didahulukan. Mesin dipilih berdasarkan waktu selesai paling awal (ECT).',
+ CR:'Critical Ratio: operasi dari SO yang paling kritis terhadap due date didahulukan. Mesin dipilih berdasarkan ECT.',
+ GA:'Genetic Algorithm dengan 1 seed (pengaturan dasar). Lebih lambat (sekitar 10–60 detik), biasanya hasilnya lebih baik. Untuk hasil skripsi 20 seed, jalankan skrip aslinya terpisah.'};
+const p2=n=>String(n).padStart(2,'0');
+const fd=d=>`${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+const fdt=d=>`${fd(d)} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+const dm=d=>`${d.getDate()} ${MON[d.getMonth()]}`;
+const iso=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+const day0=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+let CFG={default_method:'EDD',method_label:'',allow_choice:false},FILE=null,DATA=null,T=[],COL={},VIEW='day',RANGE=null,FOC=null,BOUNDS=null;
+
+/* ---------- 1. pilih file ---------- */
+$('file').onchange=async e=>{
+  const f=e.target.files[0];FILE=f||null;$('run').disabled=true;if(!f)return;
+  $('st').textContent='Membaca file…';
+  try{
+    const w=XLSX.read(await f.arrayBuffer(),{type:'array',bookSheets:true});
+    $('sh').innerHTML=REQ.map(n=>{const ok=w.SheetNames.includes(n);return `<span class="${ok?'y':'n'}">${ok?'✓':'✗'} ${n}</span>`}).join('');
+    const miss=REQ.filter(n=>!w.SheetNames.includes(n));
+    if(miss.length){$('st').innerHTML=`<span class="err">Sheet kurang: ${miss.join(', ')}</span>`;return}
+    $('st').textContent=`${f.name} siap dijadwalkan (${(f.size/1024).toFixed(0)} KB).`;$('run').disabled=false;
+    try{const w2=XLSX.read(await f.arrayBuffer(),{type:'array',sheets:['Human_Capacity','Resources']});
+      const hc=XLSX.utils.sheet_to_json(w2.Sheets.Human_Capacity),rs=XLSX.utils.sheet_to_json(w2.Sheets.Resources);
+      if(hc.length){const g=['Mech','Mach','Welder','QC'],a=hc[0],b=hc[hc.length-1];
+        [['wMech',a.Mech],['wMach',a.Mach],['wWeld',a.Welder],['wQC',a.QC]].forEach(([i,v])=>{$(i).value=v;$(i).dataset.base=v});
+        $('pat').textContent='Patokan Excel (bulan pertama → terakhir): '+g.map(k=>`${k} ${a[k]}→${b[k]}`).join(', ')+` · ${rs.filter(r=>r.Resource_Type==='Internal').length} mesin internal.`}
+    }catch(_){}
+  }catch(x){$('st').innerHTML='<span class="err">File tidak bisa dibaca: '+esc(x.message)+'</span>'}
+};
+const curMethod=()=>$('methBlock').classList.contains('hide')?CFG.default_method:document.querySelector('input[name=method]:checked').value;
+function syncMethod(){
+  const m=curMethod();
+  $('mnote').textContent=NOTE[m];$('gaBox').classList.toggle('hide',m!=='GA');$('gaBox2').classList.toggle('hide',m!=='GA');
+}
+document.querySelectorAll('input[name=method]').forEach(r=>r.onchange=syncMethod);syncMethod();
+document.querySelectorAll('input[name=chg]').forEach(r=>r.onchange=()=>$('chgBox').classList.toggle('hide',document.querySelector('input[name=chg]:checked').value!=='y'));
+
+/* ---------- 2. panggil server ---------- */
+$('run').onclick=async()=>{
+  if(!FILE)return;const m=curMethod(),btn=$('run');
+  const fd_=new FormData();fd_.append('file',FILE);fd_.append('method',m);fd_.append('due_time',$('due').value||'17:00');
+  fd_.append('label',$('lbl').value||'');fd_.append('seed',$('seed').value||101);fd_.append('generations',$('gens').value||70);
+  if(document.querySelector('input[name=chg]:checked').value==='y'){
+    const wk={Mech:+$('wMech').value,Mach:+$('wMach').value,Welder:+$('wWeld').value,QC:+$('wQC').value},mc={};
+    const ids={Mech:'wMech',Mach:'wMach',Welder:'wWeld',QC:'wQC'};Object.keys(wk).forEach(k=>{if(!(wk[k]>0)||String(wk[k])===$(ids[k]).dataset.base)delete wk[k]});
+    for(const ln of $('mesin').value.split(/\n/)){const q=ln.split('=');if(q.length==2&&+q[1]>0)mc[q[0].trim()]=+q[1]}
+    fd_.append('workers',JSON.stringify(wk));fd_.append('machines',JSON.stringify(mc));}
+  btn.disabled=true;const t0=Date.now(),tm=setInterval(()=>{btn.textContent=(m==='GA'?'Menghitung GA… ':'Menghitung… ')+Math.floor((Date.now()-t0)/1000)+' dtk'},500);
+  try{
+    const r=await fetch(API+'/api/schedule',{method:'POST',body:fd_});
+    let j=null;try{j=await r.json()}catch(_){}
+    if(!r.ok)throw new Error(j&&j.detail?j.detail:'Server membalas error '+r.status);
+    DATA=j;render();loadHistory();
+  }catch(x){
+    $('runhelp').innerHTML='<span class="err">'+esc(x.message==='Failed to fetch'?'Tidak bisa terhubung ke server. Buka aplikasi lewat alamat backend (bukan klik dua kali index.html).':x.message)+'</span>';
+  }finally{clearInterval(tm);btn.disabled=false;btn.innerHTML='Jalankan penjadwalan <span aria-hidden="true">→</span>'}
+};
+
+/* ---------- 3. tampilkan hasil ---------- */
+function render(){
+  T=DATA.operations.map(o=>({so:String(o.SO_ID),comp:o.Component_Code,id:o.Operation_ID,res:o.Resource,
+    vendor:o.Resource_Type==='Vendor',s:new Date(o.Start),e:new Date(o.Finish),
+    p:o.Resource_Type==='Vendor'?(o.Vendor_LT_Days!=null?o.Vendor_LT_Days+' hari (vendor)':'vendor'):(o.Duration_Productive_Min+' menit'),
+    pm:o.Resource_Type==='Vendor'?null:o.Duration_Productive_Min,
+    mp:o.Manpower_Group?o.Manpower_Qty+' '+o.Manpower_Group:''})).sort((a,b)=>a.s-b.s);
+  const sos=DATA.so_summary.map(x=>String(x.SO_ID));
+  COL={};sos.forEach((k,i)=>COL[k]=PAL[i%PAL.length]);
+  const tmin=day0(new Date(Math.min(...T.map(t=>t.s)))),tmax=day0(new Date(Math.max(...T.map(t=>t.e))));
+  BOUNDS={tmin,tmax};RANGE=null;VIEW='day';FOC=null;
+  $('gscale').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v==='day'));
+  $('gfrom').value=iso(tmin);$('gto').value=iso(tmax);$('gfrom').min=$('gto').min=iso(tmin);$('gfrom').max=$('gto').max=iso(tmax);
+  $('leg').innerHTML=sos.map(k=>`<span data-so="${esc(k)}" tabindex="0" role="button" style="cursor:pointer"><i style="background:${COL[k]}"></i>SO ${esc(k)}</span>`).join('');
+  const L=DATA.so_summary,nl=L.filter(r=>r.Status==='LATE').length,U=DATA.utilization,
+    avg=U.reduce((a,u)=>a+u.pct,0)/(U.length||1),fin=new Date(Math.max(...L.map(r=>+new Date(r.Completion))));
+  $('kpi').innerHTML=`<div><b>${L.length}</b><span>SO dijadwalkan</span></div><div><b style="color:${nl?'var(--bad)':'var(--ok)'}">${nl}</b><span>SO terlambat</span></div><div><b>${T.length}</b><span>operasi</span></div><div><b>${dm(fin)}</b><span>selesai semua</span></div><div><b>${avg.toFixed(0)}%</b><span>rata-rata utilisasi mesin</span></div>`;
+  const XC=DATA.so_extra_cols||[],XM=DATA.so_extra||{},xv=v=>v==null?'':/^\d{4}-\d\d-\d\dT/.test(v)?fd(new Date(v)):v;
+  $('late').innerHTML='<tr><th>SO</th>'+XC.map(c=>`<th>${esc(c.replace(/_/g,' '))}</th>`).join('')+'<th>Release</th><th>Due date</th><th>Selesai</th><th>Status</th></tr>'+L.map(r=>{
+    const late=r.Status==='LATE';return `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${COL[String(r.SO_ID)]};margin-right:8px"></i>${esc(r.SO_ID)}</td>${XC.map(c=>`<td>${esc(xv((XM[String(r.SO_ID)]||{})[c]))}</td>`).join('')}<td>${fd(new Date(r.Release))}</td><td>${fdt(new Date(r.Due))}</td><td>${fdt(new Date(r.Completion))}</td><td><span class="tag ${late?'tl':'to'}">${late?'Telat '+r.Tardiness_Days.toFixed(1)+' hari':'Tepat waktu'}</span></td></tr>`}).join('');
+  $('util').innerHTML=U.map(u=>`<div class="ub"><span>${esc(u.resource)}</span><div class="b"><span style="width:${Math.min(100,u.pct)}%;background:${u.pct>90?'var(--bad)':u.pct>70?'var(--amb)':'var(--acc)'}"></span></div><span>${u.pct.toFixed(0)}%</span></div>`).join('')+'<p class="note">Utilisasi = menit proses mesin ÷ (jumlah unit × menit efektif hari kerja selama jadwal berjalan). Merah di atas 90%, kuning di atas 70%.</p>';
+  $('mfoot').innerHTML=`<strong>Metode:</strong> ${esc(DATA.method_label)} · dihitung ${DATA.runtime_sec} detik di server. Kalender kerja dan lead time mengikuti sheet Excel.`+(Object.keys(DATA.overrides.workers).length||Object.keys(DATA.overrides.machines).length?` <b>Memakai perubahan kapasitas:</b> ${esc(JSON.stringify(DATA.overrides.workers))} ${esc(JSON.stringify(DATA.overrides.machines))}`:' Kapasitas memakai patokan Excel.');
+  if(DATA.run_id)$('mfoot').innerHTML+=`<br>Tersimpan di riwayat sebagai <b>#${esc(DATA.run_id)}</b> · ${fdt(new Date(DATA.created_at))}${DATA.label?' · '+esc(DATA.label):''}`;
+  $('out').classList.remove('hide');renderAll();$('out').scrollIntoView({behavior:'smooth'});
+}
+function view(){ // operasi yang beririsan dengan rentang tanggal
+  if(!RANGE)return T;const lo=+RANGE.from,hi=+RANGE.to+DAY;return T.filter(t=>+t.e>lo&&+t.s<hi)}
+function renderAll(){renderGantt();renderSheet()}
+
+function renderGantt(){
+  const lo=RANGE?+RANGE.from:+BOUNDS.tmin,hi=(RANGE?+RANGE.to:+BOUNDS.tmax)+DAY;
+  const Tv=view(),ppd={day:64,week:18,year:3.6}[VIEW],LW=110,by={};
+  Tv.forEach(t=>(by[t.res]??=[]).push(t));
+  const names=Object.keys(by).sort();
+  $('gmeta').textContent=`${Tv.length} dari ${T.length} operasi tampil`;
+  if(!names.length){$('gantt').innerHTML='<p class="note" style="padding:14px 0">Tidak ada operasi pada rentang tanggal ini.</p>';return}
+  const W=LW+(hi-lo)/DAY*ppd+20,X=ms=>LW+(ms-lo)/DAY*ppd;let y=24,body='',ri=0;
+  names.forEach(n=>{const l=[];by[n].sort((a,b)=>a.s-b.s).forEach(t=>{let i=l.findIndex(x=>x<=+t.s+1);if(i<0){i=l.length;l.push(0)}l[i]=+t.e;t.l=i});
+    const rh=l.length*22+10;
+    body+=`<rect x="0" y="${y}" width="${W}" height="${rh}" fill="${ri++%2?'var(--band)':'transparent'}"/><text x="6" y="${y+22}" style="font-weight:600">${esc(n)}</text>`;
+    by[n].forEach(t=>{const x1=Math.max(X(+t.s),LW),x2=Math.min(X(+t.e),W-20);if(x2<=LW||x1>=W-20)return;
+      body+=`<rect data-i="${T.indexOf(t)}" data-so="${esc(t.so)}" x="${x1}" y="${y+5+t.l*22}" width="${Math.max(2,x2-x1)}" height="18" rx="4" fill="${COL[t.so]}"${t.vendor?' fill-opacity=".45" stroke="'+COL[t.so]+'" stroke-dasharray="3 2"':''}/>`});
+    y+=rh});
+  let grid='';
+  if(VIEW!=='year'){for(let d=new Date(lo);+d<hi;d.setDate(d.getDate()+1))if(d.getDay()%6==0)grid+=`<rect x="${X(+d)}" y="18" width="${ppd}" height="${y-18}" fill="var(--line)" opacity=".35"/>`}
+  let tk='';
+  if(VIEW==='day'){for(let d=new Date(lo);+d<hi;d.setDate(d.getDate()+1))tk+=`<line x1="${X(+d)}" x2="${X(+d)}" y1="18" y2="${y}" stroke="var(--line)"/><text x="${X(+d)+3}" y="12">${dm(d)}</text>`}
+  else if(VIEW==='week'){for(let d=new Date(lo);+d<hi;d.setDate(d.getDate()+1)){const mon=d.getDay()===1||+d===lo;if(mon)tk+=`<line x1="${X(+d)}" x2="${X(+d)}" y1="18" y2="${y}" stroke="var(--line)"/><text x="${X(+d)+3}" y="12">${dm(d)}</text>`}}
+  else{for(let d=new Date(lo);+d<hi;d.setDate(d.getDate()+1)){if(d.getDate()===1||+d===lo)tk+=`<line x1="${X(+d)}" x2="${X(+d)}" y1="18" y2="${y}" stroke="var(--line)"/><text x="${X(+d)+3}" y="12">${MON[d.getMonth()]} ${d.getFullYear()}</text>`}}
+  $('gantt').innerHTML=`<svg width="${W}" height="${y}" viewBox="0 0 ${W} ${y}">${grid}${tk}${body}</svg>`;
+  hl();
+  const tip=$('tip'),g=$('gantt'),show=e=>{const r=e.target.closest('rect[data-i]');if(!r){tip.style.display='none';return}
+    const t=T[r.dataset.i];tip.innerHTML=`<b>SO ${esc(t.so)}</b><br>Komponen: ${esc(t.comp)}<br>${esc(t.id)}<br>Mesin: ${esc(t.res)}<br>Mulai: ${fdt(t.s)}<br>Selesai: ${fdt(t.e)}<br>Proses: ${esc(t.p)}${t.mp?'<br>Tenaga: '+esc(t.mp):''}`;
+    tip.style.display='block';tip.style.left=Math.min(e.clientX+12,innerWidth-262)+'px';tip.style.top=Math.min(e.clientY+12,innerHeight-190)+'px'};
+  g.onpointermove=show;g.onpointerdown=show;g.onpointerleave=()=>tip.style.display='none';
+}
+function hl(){document.querySelectorAll('#gantt rect[data-so]').forEach(r=>r.style.opacity=!FOC||r.dataset.so===FOC?1:.15);document.querySelectorAll('#leg span').forEach(x=>x.style.opacity=!FOC||x.dataset.so===FOC?1:.4)}
+$('leg').onclick=$('leg').onkeydown=e=>{if(e.type==='keydown'&&e.key!=='Enter')return;const x=e.target.closest('[data-so]');if(!x)return;FOC=FOC===x.dataset.so?null:x.dataset.so;hl()};
+
+function renderSheet(){
+  const rows=view();
+  $('shsub').textContent=RANGE?`Operasi yang beririsan dengan ${fd(RANGE.from)} – ${fd(RANGE.to)} (${rows.length} baris), urut waktu mulai.`:`Semua operasi (${rows.length} baris), urut waktu mulai.`;
+  $('sheet').innerHTML='<tr><th>No</th><th>SO</th><th>Operasi</th><th>Komponen</th><th>Mesin</th><th>Mulai</th><th>Selesai</th><th>Proses</th></tr>'+
+   rows.map((t,i)=>`<tr><td>${i+1}</td><td><i style="display:inline-block;width:9px;height:9px;border-radius:3px;background:${COL[t.so]};margin-right:6px"></i>${esc(t.so)}</td><td>${esc(t.id)}</td><td>${esc(t.comp)}</td><td>${esc(t.res)}</td><td>${fdt(t.s)}</td><td>${fdt(t.e)}</td><td>${esc(t.p)}</td></tr>`).join('');
+}
+
+/* ---------- riwayat & konfigurasi ---------- */
+async function loadHistory(){
+  try{const r=await fetch(API+'/api/runs'),j=await r.json(),rs=j.runs||[];
+    $('hist').innerHTML=rs.length?'<tr><th>Tanggal</th><th>Nama / catatan</th><th>File</th><th>Metode</th><th>SO</th><th>Terlambat</th><th></th></tr>'+rs.map(x=>`<tr><td>${fdt(new Date(x.created_at))}</td><td>${esc(x.label||'—')}</td><td>${esc(x.filename)}</td><td>${esc(x.method)}</td><td>${x.n_so}</td><td>${x.n_late}</td><td><button class="sec" data-open="${x.id}">Buka</button> <a class="sec" style="padding:6px 10px;text-decoration:none" href="${API}/api/runs/${x.id}/input">Excel input</a> <button class="sec" data-del="${x.id}">Hapus</button></td></tr>`).join(''):'<tr><td style="color:var(--mute)">Belum ada riwayat. Hasil penjadwalan pertama akan muncul di sini.</td></tr>'}
+  catch(e){$('hist').innerHTML='<tr><td class="err">Riwayat tidak bisa dimuat.</td></tr>'}
+}
+$('hist').onclick=async e=>{
+  const o=e.target.closest('[data-open]'),d=e.target.closest('[data-del]');
+  if(o){const r=await fetch(API+'/api/runs/'+o.dataset.open);if(r.ok){DATA=await r.json();render()}}
+  if(d&&confirm('Hapus riwayat ini? Tidak bisa dikembalikan.')){await fetch(API+'/api/runs/'+d.dataset.del,{method:'DELETE'});loadHistory()}
+};
+(async()=>{
+  try{CFG=await (await fetch(API+'/api/config')).json()}catch(_){}
+  const uji=CFG.allow_choice||/[?&]uji=1/.test(location.search);
+  if(uji){$('methBlock').classList.remove('hide');const r=document.querySelector(`input[name=method][value=${CFG.default_method}]`);if(r)r.checked=true}
+  else $('fixedNote').textContent='Metode penjadwalan: '+(CFG.method_label||CFG.default_method)+'.';
+  syncMethod();loadHistory();
+})();
+
+/* ---------- 4. skala & rentang tanggal ---------- */
+$('gscale').onclick=e=>{const b=e.target.closest('button');if(!b)return;VIEW=b.dataset.v;$('gscale').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderGantt()};
+$('gapply').onclick=()=>{let f=$('gfrom').value,t=$('gto').value;if(!f||!t)return;if(f>t)[f,t]=[t,f];
+  RANGE={from:new Date(f+'T00:00:00'),to:new Date(t+'T00:00:00')};$('gfrom').value=f;$('gto').value=t;renderAll()};
+$('gclear').onclick=()=>{RANGE=null;$('gfrom').value=iso(BOUNDS.tmin);$('gto').value=iso(BOUNDS.tmax);renderAll()};
+
+/* ---------- 5. export ---------- */
+$('expPdf').onclick=()=>window.print();
+$('exp').onclick=()=>{
+  const w=XLSX.utils.book_new(),A=XLSX.utils.aoa_to_sheet,rows=view();
+  XLSX.utils.book_append_sheet(w,A([['No','SO','Operation ID','Komponen','Mesin','Mulai','Selesai','Proses','Tenaga kerja'],...rows.map((t,i)=>[i+1,t.so,t.id,t.comp,t.res,fdt(t.s),fdt(t.e),t.p,t.mp])]),'Jadwal');
+  XLSX.utils.book_append_sheet(w,A([['SO','Release','Due date','Selesai','Status','Telat (hari)'],...DATA.so_summary.map(r=>[r.SO_ID,fd(new Date(r.Release)),fdt(new Date(r.Due)),fdt(new Date(r.Completion)),r.Status==='LATE'?'Telat':'Tepat waktu',+r.Tardiness_Days.toFixed(2)])]),'Keterlambatan');
+  XLSX.utils.book_append_sheet(w,A([['Mesin','Utilisasi (%)'],...DATA.utilization.map(u=>[u.resource,u.pct])]),'Utilisasi');
+  const tag=RANGE?`_${iso(RANGE.from)}_${iso(RANGE.to)}`:'';
+  XLSX.writeFile(w,`jadwal-${DATA.method}${tag}.xlsx`);
+};
+</script>
+</body></html>
